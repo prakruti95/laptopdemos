@@ -1,0 +1,71 @@
+import 'package:flutter/material.dart';
+import 'package:dio/dio.dart';
+
+void main() {
+  runApp(MaterialApp(
+    home: ProductViewScreen(),
+    debugShowCheckedModeBanner: false,
+  ));
+}
+
+class ProductViewScreen extends StatefulWidget {
+  @override
+  _ProductViewScreenState createState() => _ProductViewScreenState();
+}
+
+class _ProductViewScreenState extends State<ProductViewScreen> {
+  List<dynamic> products = [];
+  bool isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    fetchProducts();
+  }
+
+  Future<void> fetchProducts() async {
+    try {
+      final dio = Dio();
+      final response = await dio.get('https://prakrutitech.buzz/Fluttertestapi/productview.php');
+
+      if (response.statusCode == 200) {
+        setState(() {
+          products = response.data;
+          isLoading = false;
+        });
+      } else {
+        throw Exception('Failed to load products');
+      }
+    } catch (e) {
+      print("Error fetching products: $e");
+      setState(() {
+        isLoading = false;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text("Product List"),
+        backgroundColor: Colors.teal,
+      ),
+      body: isLoading
+          ? Center(child: CircularProgressIndicator())
+          : products.isEmpty
+              ? Center(child: Text("No products found"))
+              : ListView.builder(
+                  itemCount: products.length,
+                  itemBuilder: (context, index) {
+                    final product = products[index];
+                    return ListTile(
+                      leading: Icon(Icons.shopping_bag),
+                      title: Text(product['p_name'] ?? "No Name"),
+                      subtitle: Text("Price: ₹${product['p_price'] ?? "--"}"),
+                    );
+                  },
+                ),
+    );
+  }
+}
